@@ -149,15 +149,17 @@ footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 2
 <main>
   <div class="eyebrow"><span class="dot wait" id="live-dot"></span><span id="eyebrow">Connecting to Ethereum Sepolia...</span></div>
   <h1>What a gallon costs, <span>on the blockchain.</span></h1>
-  <p class="lede">Weekly US gasoline prices from the Energy Information Administration, written
-    to a smart contract and read live from the chain, right here in your browser.</p>
+  <p class="lede">The weekly price of regular unleaded gasoline across the US, from the Energy
+    Information Administration's Monday survey, written to a smart contract and read live from
+    the chain, right here in your browser.</p>
 
   <div class="sign">
     <div class="panel pump">
       <div class="grade">REGULAR</div>
-      <div class="lbl">US average</div>
+      <div class="lbl">US average, regular unleaded</div>
       <div class="digits" id="us">--.--</div>
       <div class="sub" id="week">Week of ...</div>
+      <div class="sub">Retail price per gallon, taxes included</div>
     </div>
     <div class="extremes">
       <div class="panel ext hi"><div class="lbl">Most expensive state</div><div class="v" id="hi">--</div><div class="who" id="hi-n"></div></div>
@@ -222,7 +224,9 @@ footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 2
       </ul>
     </details>
   </section>
-  <footer>Data: U.S. Energy Information Administration, regular gasoline, weekly.</footer>
+  <footer>Data: U.S. Energy Information Administration, weekly retail gasoline prices (series
+    EPMR, regular grade, all formulations). Retail price per gallon with all taxes included,
+    surveyed each Monday. Midgrade, premium and diesel are not included.</footer>
 </main>
 <script>
 const CONTRACT = "0xca8A40f3Bd33BDf35218A3399f75e70b38d3Cf20";
