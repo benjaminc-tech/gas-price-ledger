@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gas Price Ledger</title>
+<meta name="description" content="Weekly US gasoline prices from the EIA, recorded on the Ethereum Sepolia test network and read live from the chain in your browser.">
+<style>
+:root {
+  --bg: #f7f6f2; --card: #ffffff; --ink: #1c1c1a; --muted: #6b6a64; --line: #e3e1da;
+  --accent: #b5651d; --measured: #1f6f43; --estimate: #8a6d1f; --est-bg: #fbf3df;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141412; --card: #1d1d1a; --ink: #ecebe6; --muted: #9b9a92; --line: #2f2e2a;
+    --accent: #e0914a; --measured: #6fcf97; --estimate: #e2c06b; --est-bg: #2a2516;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 32px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.02em; }
+.lede { color: var(--muted); margin: 0 0 24px; max-width: 640px; }
+.hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.stat .k { font-size: 13px; color: var(--muted); }
+.stat .v { font-size: 26px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.status { font-size: 14px; color: var(--muted); margin-bottom: 16px; min-height: 21px; }
+.status.err { color: #c0392b; }
+section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 8px 16px 12px; margin-bottom: 16px; }
+h2 { font-size: 18px; margin: 12px 0 4px; }
+input[type=search] { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--bg); color: var(--ink); font-size: 16px; margin: 8px 0; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+td { padding: 8px 4px; border-top: 1px solid var(--line); vertical-align: top; }
+td.price { text-align: right; font-weight: 600; white-space: nowrap; width: 90px; }
+.tag { font-size: 12px; padding: 2px 8px; border-radius: 99px; white-space: nowrap; display: inline-block; }
+.tag.m { color: var(--measured); border: 1px solid currentColor; }
+.tag.e { color: var(--estimate); background: var(--est-bg); }
+.note { font-size: 12px; color: var(--muted); }
+details { margin-top: 8px; }
+summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
+.how p, .how li { color: var(--muted); }
+a { color: var(--accent); }
+code { font-size: 13px; word-break: break-all; }
+@media (max-width: 520px) { h1 { font-size: 26px; } td { font-size: 15px; } .tag { font-size: 11px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Gas Price Ledger</h1>
+  <p class="lede">Weekly US gasoline prices from the U.S. Energy Information Administration,
+    written to a smart contract on the Ethereum Sepolia test network. This page reads
+    every number below straight from the blockchain, in your browser, as it loads.</p>
+
+  <div class="hero">
+    <div class="stat"><div class="k">US average, regular</div><div class="v" id="us">...</div></div>
+    <div class="stat"><div class="k">Week of</div><div class="v" id="week">...</div></div>
+    <div class="stat"><div class="k">Highest state</div><div class="v" id="hi">...</div></div>
+    <div class="stat"><div class="k">Lowest state</div><div class="v" id="lo">...</div></div>
+  </div>
+  <div class="status" id="status">Reading the blockchain...</div>
+
+  <section>
+    <h2>States</h2>
+    <input type="search" id="filter" placeholder="Find a state" aria-label="Find a state">
+    <table><tbody id="states"></tbody></table>
+    <p class="note">EIA measures 9 states weekly. Every other state shows the price for its
+      EIA region, marked "regional estimate".</p>
+  </section>
+
+  <section>
+    <h2>Cities</h2>
+    <table><tbody id="cities"></tbody></table>
+  </section>
+
+  <section class="how">
+    <details>
+      <summary>How this works</summary>
+      <ul>
+        <li>Each week, prices from the EIA are written to the contract by its owner's wallet.
+          Writing costs a small fee ("gas") in test ETH.</li>
+        <li>Anyone can read the contract for free. This page sends <code>eth_call</code>
+          requests to a public Sepolia node and decodes the answers itself, with no server
+          and no libraries.</li>
+        <li>Nothing on-chain can be edited. If EIA corrects a price, the correction is added
+          as a new revision.</li>
+        <li>This runs on a test network: the coins have no value.</li>
+      </ul>
+      <p>Contract: <a id="contract-link" href="#"><code id="contract"></code></a></p>
+    </details>
+  </section>
+</main>
+<script>
+const CONTRACT = "0xca8A40f3Bd33BDf35218A3399f75e70b38d3Cf20";
+const RPC = "https://ethereum-sepolia-rpc.publicnode.com";
+const EXPLORER = "https://sepolia.etherscan.io";
+const SEL_LATEST_WEEK = "0x46b5b78f";   // latestWeek()
+const SEL_PRICE_OF = "0xa942ad06";      // priceOf(bytes8,uint32)
+const LOOKBACK_WEEKS = 4;
+
+const MEASURED = {
+  NUS: "United States", R10: "East Coast", R1X: "New England", R1Y: "Central Atlantic", R1Z: "Lower Atlantic",
+  R20: "Midwest", R30: "Gulf Coast", R40: "Rocky Mountain", R50: "West Coast", R5XCA: "West Coast except California",
+  SCA: "California", SCO: "Colorado", SFL: "Florida", SMA: "Massachusetts", SMN: "Minnesota",
+  SNY: "New York", SOH: "Ohio", STX: "Texas", SWA: "Washington",
+  YBOS: "Boston", YCLE: "Cleveland", YDEN: "Denver", Y44HO: "Houston", Y05LA: "Los Angeles",
+  YMIA: "Miami", Y35NY: "New York City", Y05SF: "San Francisco", Y48SE: "Seattle", YORD: "Chicago",
+};
+const CITIES = ["YBOS", "YORD", "YCLE", "YDEN", "Y44HO", "Y05LA", "YMIA", "Y35NY", "Y05SF", "Y48SE"];
+const REGIONS = {
+  R1X: "CT ME MA NH RI VT", R1Y: "DE DC MD NJ NY PA", R1Z: "FL GA NC SC VA WV",
+  R20: "IL IN IA KS KY MI MN MO NE ND OH OK SD TN WI", R30: "AL AR LA MS NM TX",
+  R40: "CO ID MT UT WY", R5XCA: "AK AZ CA HI NV OR WA",
+};
+const MEASURED_STATES = { CA: "SCA", CO: "SCO", FL: "SFL", MA: "SMA", MN: "SMN",
+  NY: "SNY", OH: "SOH", TX: "STX", WA: "SWA" };
+const NAMES = { AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",CO:"Colorado",
+  CT:"Connecticut",DE:"Delaware",DC:"District of Columbia",FL:"Florida",GA:"Georgia",HI:"Hawaii",
+  ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",
+  ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",MN:"Minnesota",MS:"Mississippi",
+  MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",
+  NM:"New Mexico",NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",
+  OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",SD:"South Dakota",
+  TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",VA:"Virginia",WA:"Washington",
+  WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming" };
+
+const STATE_SOURCE = {};
+for (const [region, list] of Object.entries(REGIONS)) {
+  for (const st of list.split(" ")) {
+    STATE_SOURCE[st] = MEASURED_STATES[st] ? [MEASURED_STATES[st], true] : [region, false];
+  }
+}
+
+// ABI encoding by hand: each argument is a 32-byte word.
+// bytes8 is left-aligned (padded on the right); uint32 is right-aligned (padded on the left).
+function encodePriceOf(code, week) {
+  const codeHex = [...code].map(c => c.charCodeAt(0).toString(16).padStart(2, "0")).join("");
+  return SEL_PRICE_OF + codeHex.padEnd(64, "0") + week.toString(16).padStart(64, "0");
+}
+
+async function rpcBatch(calls) {
+  const body = calls.map((data, i) => ({ jsonrpc: "2.0", id: i, method: "eth_call",
+    params: [{ to: CONTRACT, data }, "latest"] }));
+  const res = await fetch(RPC, { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`node answered ${res.status}`);
+  const out = await res.json();
+  out.sort((a, b) => a.id - b.id);
+  return out.map(r => { if (r.error) throw new Error(r.error.message); return r.result; });
+}
+
+const weekStr = w => `${String(w).slice(0, 4)}-${String(w).slice(4, 6)}-${String(w).slice(6)}`;
+const money = t => `$${(t / 1000).toFixed(3)}`;
+function weeksBack(week, n) {
+  const d = new Date(Date.UTC(+String(week).slice(0, 4), +String(week).slice(4, 6) - 1, +String(week).slice(6)));
+  d.setUTCDate(d.getUTCDate() - 7 * n);
+  return +d.toISOString().slice(0, 10).replaceAll("-", "");
+}
+
+async function load() {
+  const status = document.getElementById("status");
+  document.getElementById("contract").textContent = CONTRACT;
+  document.getElementById("contract-link").href = `${EXPLORER}/address/${CONTRACT}#events`;
+  try {
+    const [latestHex] = await rpcBatch([SEL_LATEST_WEEK]);
+    const latest = parseInt(latestHex, 16);
+    if (!latest) { status.textContent = "The ledger is empty so far."; return; }
+
+    // Newest value per location, looking back a few weeks so a partly written new week
+    // never hides last week's complete numbers.
+    const stored = {};
+    let missing = Object.keys(MEASURED);
+    for (let back = 0; back <= LOOKBACK_WEEKS && missing.length; back++) {
+      const wk = weeksBack(latest, back);
+      const results = await rpcBatch(missing.map(c => encodePriceOf(c, wk)));
+      results.forEach((hex, i) => {
+        const tenths = parseInt(hex.slice(2, 66), 16);
+        const revision = parseInt(hex.slice(66, 130), 16);
+        if (revision) stored[missing[i]] = { tenths, revision, week: wk };
+      });
+      missing = Object.keys(MEASURED).filter(c => !stored[c]);
+    }
+
+    document.getElementById("week").textContent = weekStr(latest);
+    if (stored.NUS) document.getElementById("us").textContent = money(stored.NUS.tenths);
+
+    const measuredStates = Object.entries(MEASURED_STATES)
+      .filter(([, c]) => stored[c]).map(([st, c]) => [NAMES[st], stored[c].tenths]);
+    measuredStates.sort((a, b) => b[1] - a[1]);
+    if (measuredStates.length) {
+      document.getElementById("hi").textContent = `${money(measuredStates[0][1])}`;
+      document.getElementById("hi").title = measuredStates[0][0];
+      document.getElementById("hi").insertAdjacentHTML("afterend",
+        `<div class="note">${measuredStates[0][0]}</div>`);
+      const low = measuredStates[measuredStates.length - 1];
+      document.getElementById("lo").textContent = money(low[1]);
+      document.getElementById("lo").insertAdjacentHTML("afterend", `<div class="note">${low[0]}</div>`);
+    }
+
+    const row = (name, code, measured, regionName) => {
+      const tr = document.createElement("tr");
+      tr.dataset.name = name.toLowerCase();
+      const p = stored[code];
+      const label = measured ? `<span class="tag m">measured</span>`
+        : `<span class="tag e">regional estimate</span> <span class="note">${regionName}</span>`;
+      const extra = p ? [p.revision > 1 ? `revision ${p.revision}` : "",
+        p.week !== latest ? `week ${weekStr(p.week)}` : ""].filter(Boolean).join(", ") : "";
+      tr.innerHTML = `<td>${name}<div>${label}${extra ? ` <span class="note">${extra}</span>` : ""}</div></td>`
+        + `<td class="price">${p ? money(p.tenths) : "not recorded"}</td>`;
+      return tr;
+    };
+
+    const states = document.getElementById("states");
+    Object.keys(STATE_SOURCE).sort((a, b) => NAMES[a].localeCompare(NAMES[b])).forEach(st => {
+      const [code, measured] = STATE_SOURCE[st];
+      states.appendChild(row(NAMES[st], code, measured, MEASURED[code]));
+    });
+    const cities = document.getElementById("cities");
+    CITIES.slice().sort((a, b) => MEASURED[a].localeCompare(MEASURED[b]))
+      .forEach(c => cities.appendChild(row(MEASURED[c], c, true)));
+
+    const partial = Object.values(stored).filter(v => v.week === latest).length;
+    status.textContent = `Read live from the blockchain just now. ` +
+      (partial < Object.keys(MEASURED).length
+        ? `Week ${weekStr(latest)} is partly recorded (${partial} of ${Object.keys(MEASURED).length}); older rows show their own week.`
+        : `All ${partial} EIA prices for this week are on-chain.`);
+  } catch (e) {
+    status.textContent = `Could not read the blockchain right now (${e.message}). Try reloading in a minute.`;
+    status.classList.add("err");
+  }
+}
+
+document.getElementById("filter").addEventListener("input", e => {
+  const q = e.target.value.trim().toLowerCase();
+  for (const tr of document.querySelectorAll("#states tr")) {
+    tr.style.display = !q || tr.dataset.name.includes(q) ? "" : "none";
+  }
+});
+
+load();
+</script>
+</body>
+</html>
