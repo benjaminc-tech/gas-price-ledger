@@ -29,7 +29,7 @@ body { margin: 0; color: var(--ink); background:
     radial-gradient(1200px 500px at 85% -10%, rgba(124,140,255,.18), transparent 60%),
     radial-gradient(900px 400px at -10% 10%, rgba(255,176,32,.10), transparent 60%), var(--bg);
   font: 16px/1.5 "Bricolage Grotesque", system-ui, -apple-system, sans-serif; min-height: 100vh; }
-main { max-width: 980px; margin: 0 auto; padding: 28px 16px 64px; }
+main { max-width: 1040px; margin: 0 auto; padding: 36px 16px 72px; }
 .eyebrow { font: 13px "Share Tech Mono", monospace; letter-spacing: .14em; text-transform: uppercase;
   color: var(--muted); display: flex; align-items: center; gap: 8px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cheap); box-shadow: 0 0 10px var(--cheap); flex: none; }
@@ -37,7 +37,7 @@ main { max-width: 980px; margin: 0 auto; padding: 28px 16px 64px; }
 h1 { font-weight: 800; font-size: clamp(34px, 7vw, 64px); line-height: 1; letter-spacing: -.03em; margin: 12px 0 12px; }
 h1 span { background: linear-gradient(90deg, var(--cheap), var(--mid), var(--pricey));
   -webkit-background-clip: text; background-clip: text; color: transparent; }
-.lede { color: var(--muted); max-width: 620px; margin: 0 0 28px; font-size: 17px; }
+.lede { color: var(--muted); max-width: 620px; margin: 0 0 32px; font-size: 18px; }
 
 /* pump sign */
 .sign { display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; margin-bottom: 18px; }
@@ -58,15 +58,18 @@ h1 span { background: linear-gradient(90deg, var(--cheap), var(--mid), var(--pri
 .ext.hi .v { color: var(--pricey); } .ext.lo .v { color: var(--cheap); }
 
 /* map */
-section.panel { margin-bottom: 18px; }
+section.panel { margin-bottom: 18px; padding: 22px 24px; }
 h2 { font-size: 22px; font-weight: 800; letter-spacing: -.01em; margin: 0 0 4px; }
 .hint { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
-.map { display: grid; grid-template-columns: repeat(11, 1fr); gap: 5px; max-width: 760px; margin: 0 auto; }
-.tile { aspect-ratio: 1; border-radius: 9px; border: 0; padding: 0; cursor: pointer; position: relative;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; color: #0b1020;
-  font: 800 clamp(9px, 1.6vw, 14px) "Bricolage Grotesque", sans-serif; transition: transform .12s, box-shadow .12s; }
-.tile small { font: clamp(7px, 1.1vw, 11px) "Share Tech Mono", monospace; opacity: .85; }
-.tile.est { background-image: repeating-linear-gradient(135deg, var(--est-hatch) 0 3px, transparent 3px 7px); }
+.map { display: grid; grid-template-columns: repeat(11, 1fr); gap: 6px; max-width: 860px; margin: 8px auto 0; }
+.tile { aspect-ratio: 1; border-radius: 10px; border: 2px solid transparent; padding: 0; cursor: pointer; position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: #0b1020;
+  font: 800 clamp(10px, 1.7vw, 15px) "Bricolage Grotesque", sans-serif; transition: transform .12s, box-shadow .12s;
+  box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+.tile small { font: 600 clamp(8px, 1.15vw, 12px) "Share Tech Mono", monospace; }
+/* Estimates: outlined, never filled, so measured prices stand out and text stays crisp. */
+.tile.est { background: var(--card2) !important; color: var(--ink); box-shadow: none; }
+.tile.est small { color: var(--muted); }
 .tile:hover, .tile:focus-visible, .tile.sel { transform: translateY(-2px) scale(1.06); outline: none;
   box-shadow: 0 0 0 2px var(--ink), 0 8px 20px rgba(0,0,0,.35); z-index: 2; }
 .tile.none { background: var(--card2); color: var(--muted); cursor: default; }
@@ -81,17 +84,31 @@ h2 { font-size: 22px; font-weight: 800; letter-spacing: -.01em; margin: 0 0 4px;
   background: linear-gradient(90deg, var(--cheap), var(--mid), var(--pricey)); }
 .key { display: inline-flex; align-items: center; gap: 6px; }
 .sw { width: 14px; height: 14px; border-radius: 4px; background: var(--mid); display: inline-block; }
-.sw.est { background-image: repeating-linear-gradient(135deg, var(--est-hatch) 0 3px, transparent 3px 7px); }
+.sw.est { background: var(--card2); border: 2px solid var(--mid); }
 
-/* ranking */
-.rank { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 28px; }
-.rank li { break-inside: avoid; display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px;
-  padding: 6px 0; border-bottom: 1px solid var(--line); }
-.rank .i { font: 12px "Share Tech Mono", monospace; color: var(--muted); }
-.rank .nm { font-weight: 600; min-width: 0; }
-.rank .nm em { font-style: normal; font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 4px; }
-.bar { height: 6px; border-radius: 99px; margin-top: 4px; }
-.rank .pr { font: 16px "Share Tech Mono", monospace; }
+/* measured ranking */
+.label { font: 12px "Share Tech Mono", monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--led); margin-bottom: 6px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+.two > .panel { margin-bottom: 0; }
+.rank { list-style: none; margin: 4px 0 0; padding: 0; }
+.rank li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: end; padding: 9px 0;
+  border-bottom: 1px solid var(--line); }
+.rank li:last-child { border-bottom: 0; }
+.rank .nm { font-weight: 700; font-size: 17px; }
+.rank .pr { font: 22px "Share Tech Mono", monospace; }
+.rank .pr sup { font-size: .5em; vertical-align: .8em; }
+.bar { grid-column: 1 / -1; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 99px; }
+/* regions */
+.regions { display: grid; gap: 10px; margin-top: 4px; }
+.region { border-radius: 12px; padding: 10px 12px; background: var(--bg2); border-left: 4px solid var(--mid); }
+.region .rh { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.region .rn { font-weight: 800; }
+.region .rp { font: 20px "Share Tech Mono", monospace; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.chip { font: 600 12px "Bricolage Grotesque", sans-serif; padding: 2px 8px; border-radius: 99px;
+  background: var(--card2); color: var(--ink); border: 1px solid var(--line); }
+.chip.m { border-color: var(--cheap); color: var(--cheap); }
 
 /* cities */
 .cities { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
@@ -118,9 +135,11 @@ footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 2
   .sign { grid-template-columns: 1fr; }
   .extremes { grid-template-columns: 1fr 1fr; }
   .ext .v { font-size: 30px; }
-  .rank { columns: 1; }
+  .two { grid-template-columns: 1fr; }
+  .cities { grid-template-columns: 1fr 1fr; }
+  section.panel { padding: 18px 16px; }
   .map { gap: 3px; }
-  .tile { border-radius: 6px; }
+  .tile { border-radius: 6px; border-width: 1.5px; }
   .tile small { display: none; }
   .proof { grid-template-columns: 1fr; }
 }
@@ -147,24 +166,35 @@ footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 2
   </div>
 
   <section class="panel">
-    <h2>The map</h2>
-    <p class="hint">Tap a state. Striped tiles are regional estimates: EIA measures 9 states
-      directly, the rest take their region's price.</p>
+    <div class="label">Map</div>
+    <h2>Price by state</h2>
+    <p class="hint">Tap a state. Filled tiles are measured by EIA; outlined tiles take their
+      region's average.</p>
     <div class="map" id="map" role="group" aria-label="US map of gas prices"></div>
     <div class="detail" id="detail"><span class="t">Tap any state to see its price.</span></div>
     <div class="legend"><span id="lmin">$-</span><span class="ramp"></span><span id="lmax">$-</span>
       <span class="key"><span class="sw"></span>measured</span>
-      <span class="key"><span class="sw est"></span>regional estimate</span></div>
+      <span class="key"><span class="sw est"></span>regional estimate (outlined)</span></div>
   </section>
 
-  <section class="panel">
-    <h2>Every state, priciest first</h2>
-    <p class="hint">Same week, same source. Estimates are marked "est."</p>
-    <ol class="rank" id="rank"></ol>
-  </section>
+  <div class="two">
+    <section class="panel">
+      <div class="label">Measured</div>
+      <h2>The 9 states EIA surveys</h2>
+      <p class="hint">Priciest first, measured directly every week.</p>
+      <ol class="rank" id="rank"></ol>
+    </section>
+    <section class="panel">
+      <div class="label">Estimated</div>
+      <h2>Everyone else, by region</h2>
+      <p class="hint">States without their own survey take their region's average.</p>
+      <div class="regions" id="regions"></div>
+    </section>
+  </div>
 
   <section class="panel">
-    <h2>Cities</h2>
+    <div class="label">Cities</div>
+    <h2>Ten metro areas</h2>
     <p class="hint">All measured by EIA.</p>
     <div class="cities" id="cities"></div>
   </section>
@@ -309,7 +339,11 @@ function render() {
     const b = document.createElement("button");
     b.className = "tile" + (r.p ? "" : " none") + (r.measured ? "" : " est");
     b.style.gridRow = row + 1; b.style.gridColumn = col + 1;
-    if (r.p) b.style.backgroundColor = scale(r.p.tenths, lo, hi);
+    if (r.p) {
+      const c = scale(r.p.tenths, lo, hi);
+      if (r.measured) b.style.backgroundColor = c; else b.style.borderColor = c;
+      b.dataset.color = c;
+    }
     b.innerHTML = `${r.st}${r.p ? `<small>${(r.p.tenths / 1000).toFixed(2)}</small>` : ""}`;
     b.setAttribute("aria-label", `${r.name}: ${r.p ? money(r.p.tenths) : "not recorded"}${r.measured ? "" : ", regional estimate"}`);
     b.addEventListener("click", () => select(r, b));
@@ -318,17 +352,33 @@ function render() {
 
   const rank = document.getElementById("rank");
   rank.innerHTML = "";
-  priced.sort((a, b) => b.p.tenths - a.p.tenths || a.name.localeCompare(b.name));
+  const measuredRows = priced.filter(r => r.measured).sort((a, b) => b.p.tenths - a.p.tenths);
   const floor = lo * 0.9;
-  priced.forEach((r, i) => {
+  for (const r of measuredRows) {
     const li = document.createElement("li");
-    const w = Math.max(6, ((r.p.tenths - floor) / (hi - floor)) * 100);
-    li.innerHTML = `<span class="i">${String(i + 1).padStart(2, "0")}</span>
-      <span class="nm">${r.name}${r.measured ? "" : "<em>est.</em>"}
-        <div class="bar" style="width:${w}%;background:${scale(r.p.tenths, lo, hi)}"></div></span>
-      <span class="pr">${money(r.p.tenths)}</span>`;
+    const c = scale(r.p.tenths, lo, hi);
+    li.innerHTML = `<span class="nm">${r.name}</span><span class="pr" style="color:${c}">${pump(r.p.tenths)}</span>
+      <span class="bar"><i style="width:${Math.max(6, ((r.p.tenths - floor) / (hi - floor)) * 100)}%;background:${c}"></i></span>`;
     rank.appendChild(li);
-  });
+  }
+
+  const regions = document.getElementById("regions");
+  regions.innerHTML = "";
+  const groups = {};
+  for (const r of rows.filter(r => !r.measured)) (groups[r.code] ||= []).push(r);
+  Object.entries(groups).sort((a, b) => (stored[b[0]]?.tenths || 0) - (stored[a[0]]?.tenths || 0))
+    .forEach(([code, members]) => {
+      const p = stored[code];
+      const c = p ? scale(p.tenths, lo, hi) : "var(--line)";
+      const d = document.createElement("div");
+      d.className = "region";
+      d.style.borderLeftColor = c;
+      d.innerHTML = `<div class="rh"><span class="rn">${MEASURED[code]}</span>
+        <span class="rp" style="color:${c}">${p ? money(p.tenths) : "--"}</span></div>
+        <div class="chips">${members.sort((a, b) => a.name.localeCompare(b.name))
+          .map(m => `<span class="chip">${m.name}</span>`).join("")}</div>`;
+      regions.appendChild(d);
+    });
 
   const cities = document.getElementById("cities");
   cities.innerHTML = "";
@@ -357,7 +407,7 @@ function select(r, btn) {
   if (!r.p) { d.innerHTML = `<span class="n">${r.name}</span><span class="t">not recorded</span>`; return; }
   const extra = [r.p.revision > 1 ? `revision ${r.p.revision}` : "",
     r.p.week !== state.latest ? `week of ${weekNice(r.p.week)}` : ""].filter(Boolean).join(", ");
-  d.innerHTML = `<span class="p" style="color:${btn.style.backgroundColor}">${pump(r.p.tenths)}</span>
+  d.innerHTML = `<span class="p" style="color:${btn.dataset.color}">${pump(r.p.tenths)}</span>
     <span><span class="n">${r.name}</span><br><span class="t">${r.measured
       ? "Measured by EIA" : `Regional estimate: ${r.region} average`}${extra ? `, ${extra}` : ""}</span></span>`;
 }
